@@ -417,5 +417,5 @@ cv_poet_par <- function(Y, K_seq, C_seq, thres = "soft", matrix = "cor", kfolds 
     }
     loc <- which.min(cri)
     param_opt <- params[loc, ]
-    return(list(params = params, cri = cri, K_opt = param_opt[1], C_opt = param_opt[2]))
+    return(list(params = params, cri = cri, K_opt = param_opt$K, C_opt = param_opt$C))
 }

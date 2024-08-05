@@ -1,8 +1,8 @@
 Package: poetREV
 Type: Package
 Title: A Revised Version of POET
-Version: 1.0
-Date: 2024-08-04
+Version: 1.0.1
+Date: 2024-08-06
 Authors@R: person(given = "Wenliang", family = "Ding", role = c("aut", "cre"), email = "jwenfight@163.com")
 Author: Wenliang Ding [aut, cre]
 Maintainer: Wenliang Ding <jwenfight@163.com>
