@@ -104,7 +104,7 @@ poet_Khat <- function(Y, kmax = 15L) {
 #' 
 #' 'scad': scad thresholding;
 #' 
-#' 'alasso': adaptive lasso thresholding;
+#' ('alasso': adaptive lasso thresholding; we don't have this option)
 #' 
 #' Default value is set at thres='soft'.
 #' 
@@ -120,6 +120,8 @@ poet_Khat <- function(Y, kmax = 15L) {
 #' @return A list with two elements
 #' \item{SigmaY}{estimated p by p covariance matrix of y_t}
 #' \item{SigmaU}{estimated p by p covariance matrix of u_t}
+#' \item{factors}{estimated K by n factor matrix of f_t}
+#' \item{loadings}{estimated p by K loading matrix, i.e. the B in Y_t=Bf_t+u_t}
 #'
 #' @references Fan, J., Liao, Y., & Mincheva, M. (2013). Large covariance estimation by thresholding principal orthogonal complements. Journal of the Royal Statistical Society Series B: Statistical Methodology, 75(4), 603-680.
 #'
@@ -135,7 +137,57 @@ poet_Khat <- function(Y, kmax = 15L) {
 #' ## res_poet2$SigmaU
 #' mean(abs(res_poet$SigmaY - res_poet2$SigmaY)) ## [1] 5.15726e-16
 #' mean(abs(res_poet$SigmaU - res_poet2$SigmaU)) ## [1] 1.015261e-16
-#' 
+#'
+#' ## POET paper, Eq.(2.10)
+#' res_poet$factors %*% t(res_poet$factors) / n
+#' res_poet2$factors %*% t(res_poet2$factors) / n
+#' cov(t(res_poet$factors))
+#' cov(t(res_poet$factors)) * (n-1) / n
+#' cov(t(res_poet2$factors))
+#' cov(t(res_poet2$factors)) * (n-1) / n
+#'
+#' ## The difference comes from the different algorithm of SVD used in R and Cpp
+#' mean(abs(res_poet$factors - res_poet2$factors)) ## [1] 0.7913238
+#' mean(abs(res_poet$loadings - res_poet2$loadings)) ## [1] 0.1898726
+#'
+#' ## But for the identification of B f_t and the Lowrank part B SigmaF B' is
+#' ## almost the same, no matter R or Cpp is used.
+#' mean(abs(
+#'     res_poet$loadings %*% res_poet$factors -
+#'     res_poet2$loadings %*% res_poet2$factors
+#' )) ## [1] 2.580809e-15
+#' mean(abs(
+#'     res_poet$loadings %*% cov(t(res_poet$factors)) %*% t(res_poet$loadings) -
+#'     res_poet2$loadings %*% cov(t(res_poet2$factors)) %*% t(res_poet2$loadings)
+#' )) ## [1] 7.02809e-16
+#'
+#' ## For the selection of C, refer to Figure 1 in Page 8 of
+#' ## https://arxiv.org/pdf/1504.02995, An Overview on the Estimation of Large
+#' ## Covariance and Precision Matrices
+#' poet_Cmin(Y, K = 3, "soft", "cor")
+#' poet_Cmin(Y, K = 0, "soft", "cor")
+#' poet_Cmin(Y, K = 3, "hard", "cor")
+#' poet_Cmin(Y, K = 0, "hard", "cor")
+#' poet_Cmin(Y, K = 3, "scad", "cor")
+#' poet_Cmin(Y, K = 0, "scad", "cor")
+#' ## [1] 0.2247936
+#' ## [1] 0.2848489
+#' ## [1] 0.8702903
+#' ## [1] 1.116082
+#' ## [1] 0.3395239
+#' ## [1] 0.4395344
+#'
+#' poet_Cmin(Y, K = 3, "soft", "vad")
+#' poet_Cmin(Y, K = 0, "soft", "vad")
+#' poet_Cmin(Y, K = 3, "hard", "vad")
+#' poet_Cmin(Y, K = 0, "hard", "vad")
+#' poet_Cmin(Y, K = 3, "scad", "vad")
+#' poet_Cmin(Y, K = 0, "scad", "vad")
+#' ## [1] 0.2142127
+#' ## [1] 0.2686194
+#' ## [1] 0.8631784
+#' ## [1] 1.187616
+#' ## [1] 0.4448349
 poet <- function(Y, K = NULL, C = .5, thres = "soft", matrix = "cor") {
     .Call(`_poetREV_poet`, Y, K, C, thres, matrix)
 }

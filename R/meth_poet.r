@@ -30,7 +30,7 @@ poet2 <- function(Y, K = -Inf, C = -Inf, thres = "soft", matrix = "cor") {
         ## using the first K pc as a proxy for the space that
         ## spanned by the columns of the factor loading matrix
         F <- V[, 1:K, drop = FALSE] * sqrt(n) ## F is n by K
-        LamPCA <- Y %*% F / n
+        LamPCA <- Y %*% F / n ## LamPCA is p by K
         uhat <- Y - LamPCA %*% t(F) ## uhat is p by n
         Lowrank <- LamPCA %*% t(LamPCA)
         rate <- 1/sqrt(p) + sqrt(log(p)/n)
@@ -123,12 +123,14 @@ poet2 <- function(Y, K = -Inf, C = -Inf, thres = "soft", matrix = "cor") {
     )
     SigmaY <- Lowrank + SigmaU
 
-    ## if (K == 0) {
-    ##     return(list(SigmaY = SigmaY, SigmaU = SigmaU))
-    ## } else {
-    ##     return(list(SigmaU = SigmaU, SigmaY = SigmaY, factors = t(F), loadings = LamPCA))
-    ## }
-    return(list(SigmaY = SigmaY, SigmaU = SigmaU)) ## coincide with the Cpp version poet
+    if (K == 0) {
+        ## (Note 2024Aug6) SigmaU as an output here is not redundant, it leads
+        ## to the convenience of poet_Cmin, see the code of poet_Cmin where uses
+        ## poet() to construct min_eig().
+        return(list(SigmaY = SigmaY, SigmaU = SigmaU))
+    } else {
+        return(list(SigmaU = SigmaU, SigmaY = SigmaY, factors = t(F), loadings = LamPCA))
+    }
 }
 
 
